@@ -2,3 +2,6 @@
 vkdlTJs qjwjsdms 
 cmd에서 
 python -v 하면 알 수 있음
+
+아이디 Passing
+비번 Story
