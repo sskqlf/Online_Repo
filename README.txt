@@ -5,3 +5,5 @@ python -v 하면 알 수 있음
 
 아이디 Passing
 비번 Story
+
+회원가입 기능 만들어야함
