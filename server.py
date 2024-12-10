@@ -1,37 +1,39 @@
-import socket
+from flask import Flask, render_template, request, jsonify
+import cv2
+import numpy as np
+import os
 
-# 사용자 데이터베이스 (단순 예제)
-USER_DB = {
-    "user1": "password1",
-    "user2": "password2",
-    "admin": "admin123"
-}
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = './uploads'
 
-def handle_client(client_socket):
-    try:
-        client_socket.send(b"Username: ")
-        username = client_socket.recv(1024).decode().strip()
+# 전역 이미지 변수
+img = np.ones((600, 800, 3), dtype=np.uint8) * 255  # 흰 배경
+pen_color = (0, 0, 0)  # 검은색
+pen_width = 5
 
-        client_socket.send(b"Password: ")
-        password = client_socket.recv(1024).decode().strip()
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-        if username in USER_DB and USER_DB[username] == password:
-            client_socket.send(b"Login successful!\n")
-        else:
-            client_socket.send(b"Invalid username or password.\n")
-    finally:
-        client_socket.close()
+@app.route('/draw', methods=['POST'])
+def draw():
+    global img, pen_color, pen_width
+    data = request.json
+    x1, y1 = data['x1'], data['y1']
+    x2, y2 = data['x2'], data['y2']
+    
+    # 선 그리기
+    cv2.line(img, (x1, y1), (x2, y2), pen_color, pen_width)
+    return jsonify({"message": "Line drawn"})
 
-def start_server(host='0.0.0.0', port=12345):
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((host, port))
-    server_socket.listen(5)
-    print(f"Server listening on {host}:{port}...")
-
-    while True:
-        client_socket, addr = server_socket.accept()
-        print(f"Connection from {addr}")
-        handle_client(client_socket)
+@app.route('/save', methods=['POST'])
+def save():
+    global img
+    save_path = os.path.join(app.config['UPLOAD_FOLDER'], 'output.png')
+    cv2.imwrite(save_path, img)
+    return jsonify({"message": "Image saved", "path": save_path})
 
 if __name__ == "__main__":
-    start_server()
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
+    app.run(host='0.0.0.0', port=5000, debug=True)
