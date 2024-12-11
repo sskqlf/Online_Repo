@@ -17,9 +17,10 @@ class User(db.Model):
 
 # 데이터베이스 초기화 함수
 def initialize_database():
-    if not os.path.exists("users.db"):
-        db.create_all()
-        print("데이터베이스가 초기화되었습니다.")
+    with app.app_context():  # 애플리케이션 컨텍스트를 생성
+        if not os.path.exists("users.db"):
+            db.create_all()
+            print("데이터베이스가 초기화되었습니다.")
 
 # 홈 페이지
 @app.route("/")
