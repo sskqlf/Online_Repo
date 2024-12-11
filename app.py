@@ -107,7 +107,10 @@ def drawing():
                 flash("그림이 저장되었습니다!")
                 return redirect(url_for("drawing"))
 
-    return render_template("drawing.html")
+    # 저장된 그림 목록 조회
+    user_drawings = Drawing.query.filter_by(user_id=session["user_id"]).all()
+    return render_template("drawing.html", drawings=user_drawings)
+
 
 # 그림 다운로드
 @app.route("/download/<int:drawing_id>")
