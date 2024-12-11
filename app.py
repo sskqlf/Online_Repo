@@ -68,5 +68,11 @@ def logout():
     return redirect(url_for("home"))
 
 if __name__ == "__main__":
-    db.create_all()  # 데이터베이스 초기화
+    # 애플리케이션 컨텍스트 내에서 데이터베이스 초기화
+    with app.app_context():
+        db.create_all()
+        print("데이터베이스가 초기화되었습니다.")
+    
+    # Flask 애플리케이션 실행
     app.run(host="0.0.0.0", port=5000, debug=True)
+
