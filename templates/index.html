@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask Drawing App - Fill Feature</title>
+    <title>Drawing App with Fill and Line</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -15,110 +15,132 @@
     </style>
 </head>
 <body>
-    <h1>Flask Drawing App - Fill Feature</h1>
+    <h1>Drawing App</h1>
     <canvas id="drawingCanvas" width="800" height="600"></canvas>
     <div id="controls">
-        <label for="fillColor">Fill Color:</label>
-        <input type="color" id="fillColor" value="#ff0000">
-        <button onclick="fillCanvas()">Fill Entire Canvas</button>
-        <button onclick="enableFill()">Enable Fill Tool</button>
+        <label for="penColor">Pen Color:</label>
+        <input type="color" id="penColor" value="#000000">
+        <label for="penWidth">Pen Width:</label>
+        <input type="number" id="penWidth" value="2" min="1" max="10">
+        <button onclick="toggleDrawMode()">Toggle Draw/Fill Mode</button>
+        <button onclick="clearCanvas()">Clear Canvas</button>
     </div>
 
     <script>
         const canvas = document.getElementById('drawingCanvas');
         const ctx = canvas.getContext('2d');
-        let isFilling = false;
+        let isDrawing = false;
+        let isFillMode = false;
+        let startX = 0;
+        let startY = 0;
 
-        // 기본 상태
+        // 기본 캔버스 초기화
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height); // 캔버스를 흰색으로 초기화
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 채우기 색상 설정
-        const fillColorPicker = document.getElementById('fillColor');
+        // 색상과 선 두께 설정
+        const penColorPicker = document.getElementById('penColor');
+        const penWidthInput = document.getElementById('penWidth');
 
-        // 채우기 도구 활성화
-        function enableFill() {
-            isFilling = true;
-            canvas.addEventListener('click', fillArea);
-        }
+        // 선 그리기 이벤트
+        canvas.addEventListener('mousedown', (e) => {
+            if (isFillMode) return; // 채우기 모드일 때는 선 그리기 비활성화
+            isDrawing = true;
+            startX = e.offsetX;
+            startY = e.offsetY;
+        });
 
-        // 특정 영역 채우기
-        function fillArea(event) {
-            if (!isFilling) return;
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing || isFillMode) return;
+            const currentX = e.offsetX;
+            const currentY = e.offsetY;
+            ctx.strokeStyle = penColorPicker.value;
+            ctx.lineWidth = penWidthInput.value;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(currentX, currentY);
+            ctx.stroke();
+            ctx.closePath();
+            startX = currentX;
+            startY = currentY;
+        });
 
-            const rect = canvas.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask Drawing App - Fill Feature</title>
-    <style>
-        canvas {
-            border: 1px solid black;
-            cursor: crosshair;
-        }
-        #controls {
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Flask Drawing App - Fill Feature</h1>
-    <canvas id="drawingCanvas" width="800" height="600"></canvas>
-    <div id="controls">
-        <label for="fillColor">Fill Color:</label>
-        <input type="color" id="fillColor" value="#ff0000">
-        <button onclick="fillCanvas()">Fill Entire Canvas</button>
-        <button onclick="enableFill()">Enable Fill Tool</button>
-    </div>
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
 
-    <script>
-        const canvas = document.getElementById('drawingCanvas');
-        const ctx = canvas.getContext('2d');
-        let isFilling = false;
+        canvas.addEventListener('mouseout', () => {
+            isDrawing = false;
+        });
 
-        // 기본 상태
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height); // 캔버스를 흰색으로 초기화
+        // 채우기 모드 활성화
+        canvas.addEventListener('click', (e) => {
+            if (!isFillMode) return;
 
-        // 채우기 색상 설정
-        const fillColorPicker = document.getElementById('fillColor');
-
-        // 채우기 도구 활성화
-        function enableFill() {
-            isFilling = true;
-            canvas.addEventListener('click', fillArea);
-        }
-
-        // 특정 영역 채우기
-        function fillArea(event) {
-            if (!isFilling) return;
-
-            const rect = canvas.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
+            const fillColor = penColorPicker.value;
+            const x = e.offsetX;
+            const y = e.offsetY;
 
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const targetColor = getPixelColor(imageData, x, y);
-            const fillColor = hexToRgb(fillColorPicker.value);
+            const fillColorRGB = hexToRgb(fillColor);
 
-            floodFill(imageData, x, y, targetColor, fillColor);
+            floodFill(imageData, x, y, targetColor, fillColorRGB);
             ctx.putImageData(imageData, 0, 0);
+        });
 
-            isFilling = false;
-            canvas.removeEventListener('click', fillArea);
+        // 채우기 모드 전환
+        function toggleDrawMode() {
+            isFillMode = !isFillMode;
+            if (isFillMode) {
+                alert('Fill mode activated. Click on the canvas to fill an area.');
+            } else {
+                alert('Draw mode activated. Click and drag to draw.');
+            }
         }
 
-        // 캔버스 전체 채우기
-        function fillCanvas() {
-            ctx.fillStyle = fillColorPicker.value;
+        // 캔버스 초기화
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        // 픽셀의 색상 가져오기
+        // Flood Fill 알고리즘
+        function floodFill(imageData, x, y, targetColor, fillColor) {
+            const stack = [[x, y]];
+            const width = imageData.width;
+            const height = imageData.height;
+
+            while (stack.length) {
+                const [px, py] = stack.pop();
+                const index = (py * width + px) * 4;
+
+                if (
+                    px >= 0 && px < width &&
+                    py >= 0 && py < height &&
+                    colorsMatch(targetColor, [
+                        imageData.data[index],
+                        imageData.data[index + 1],
+                        imageData.data[index + 2],
+                        imageData.data[index + 3],
+                    ])
+                ) {
+                    imageData.data[index] = fillColor[0];
+                    imageData.data[index + 1] = fillColor[1];
+                    imageData.data[index + 2] = fillColor[2];
+                    imageData.data[index + 3] = 255;
+
+                    stack.push([px + 1, py]);
+                    stack.push([px - 1, py]);
+                    stack.push([px, py + 1]);
+                    stack.push([px, py - 1]);
+                }
+            }
+        }
+
+        // 픽셀 색상 가져오기
         function getPixelColor(imageData, x, y) {
             const index = (y * imageData.width + x) * 4;
             return [
@@ -137,40 +159,8 @@
         // Hex 색상 -> RGB 변환
         function hexToRgb(hex) {
             const bigint = parseInt(hex.slice(1), 16);
-            return [ (bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255, 255 ];
-        }
-
-        // Flood Fill 알고리즘
-        function floodFill(imageData, x, y, targetColor, fillColor) {
-            const stack = [[x, y]];
-
-            while (stack.length > 0) {
-                const [px, py] = stack.pop();
-                const index = (py * imageData.width + px) * 4;
-
-                if (
-                    px >= 0 && px < imageData.width &&
-                    py >= 0 && py < imageData.height &&
-                    colorsMatch(targetColor, [
-                        imageData.data[index],
-                        imageData.data[index + 1],
-                        imageData.data[index + 2],
-                        imageData.data[index + 3],
-                    ])
-                ) {
-                    imageData.data[index] = fillColor[0];       // Red
-                    imageData.data[index + 1] = fillColor[1];   // Green
-                    imageData.data[index + 2] = fillColor[2];   // Blue
-                    imageData.data[index + 3] = fillColor[3];   // Alpha
-
-                    stack.push([px + 1, py]);
-                    stack.push([px - 1, py]);
-                    stack.push([px, py + 1]);
-                    stack.push([px, py - 1]);
-                }
-            }
+            return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
         }
     </script>
 </body>
 </html>
-
