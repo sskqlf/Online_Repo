@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drawing App with Fill and Line</title>
+    <title>그림판 앱</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -15,43 +15,54 @@
     </style>
 </head>
 <body>
-    <h1>Drawing App</h1>
+    <h1>그림판 앱</h1>
     <canvas id="drawingCanvas" width="800" height="600"></canvas>
     <div id="controls">
-        <label for="penColor">Pen Color:</label>
+        <!-- 기본 색상 및 선 두께 설정 -->
+        <label for="penColor">펜 색상:</label>
         <input type="color" id="penColor" value="#000000">
-        <label for="penWidth">Pen Width:</label>
+        <label for="penWidth">펜 두께:</label>
         <input type="number" id="penWidth" value="2" min="1" max="10">
-        <button onclick="toggleDrawMode()">Toggle Draw/Fill Mode</button>
-        <button onclick="clearCanvas()">Clear Canvas</button>
+
+        <!-- 모드 전환 -->
+        <button onclick="toggleDrawMode()">그리기/채우기 전환</button>
+        <button onclick="enableTextMode()">텍스트 모드 활성화</button>
+        <button onclick="clearCanvas()">캔버스 초기화</button>
+
+        <!-- 텍스트 삽입 옵션 -->
+        <div id="textControls" style="display: none;">
+            <label for="textInput">텍스트 입력:</label>
+            <input type="text" id="textInput" placeholder="텍스트를 입력하세요">
+            <label for="fontSize">글자 크기:</label>
+            <input type="number" id="fontSize" value="20" min="10" max="100">
+        </div>
     </div>
 
     <script>
         const canvas = document.getElementById('drawingCanvas');
         const ctx = canvas.getContext('2d');
+
+        // 초기 설정
         let isDrawing = false;
         let isFillMode = false;
+        let isTextMode = false;
         let startX = 0;
         let startY = 0;
 
-        // 기본 캔버스 초기화
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // 색상과 선 두께 설정
+        // 색상 및 선 두께 선택
         const penColorPicker = document.getElementById('penColor');
         const penWidthInput = document.getElementById('penWidth');
 
         // 선 그리기 이벤트
         canvas.addEventListener('mousedown', (e) => {
-            if (isFillMode) return; // 채우기 모드일 때는 선 그리기 비활성화
+            if (isFillMode || isTextMode) return; // 채우기 또는 텍스트 모드에서는 비활성화
             isDrawing = true;
             startX = e.offsetX;
             startY = e.offsetY;
         });
 
         canvas.addEventListener('mousemove', (e) => {
-            if (!isDrawing || isFillMode) return;
+            if (!isDrawing || isFillMode || isTextMode) return;
             const currentX = e.offsetX;
             const currentY = e.offsetY;
             ctx.strokeStyle = penColorPicker.value;
@@ -74,6 +85,22 @@
             isDrawing = false;
         });
 
+        // 텍스트 삽입
+        canvas.addEventListener('click', (e) => {
+            if (!isTextMode) return;
+
+            const textInput = document.getElementById('textInput').value;
+            const fontSize = document.getElementById('fontSize').value;
+            const x = e.offsetX;
+            const y = e.offsetY;
+
+            if (textInput) {
+                ctx.font = `${fontSize}px Arial`;
+                ctx.fillStyle = penColorPicker.value;
+                ctx.fillText(textInput, x, y);
+            }
+        });
+
         // 채우기 모드 활성화
         canvas.addEventListener('click', (e) => {
             if (!isFillMode) return;
@@ -90,14 +117,24 @@
             ctx.putImageData(imageData, 0, 0);
         });
 
-        // 채우기 모드 전환
+        // 모드 전환 함수
         function toggleDrawMode() {
             isFillMode = !isFillMode;
+            isTextMode = false;
+            document.getElementById('textControls').style.display = 'none';
+
             if (isFillMode) {
-                alert('Fill mode activated. Click on the canvas to fill an area.');
+                alert('채우기 모드가 활성화되었습니다. 캔버스를 클릭하여 영역을 채우세요.');
             } else {
-                alert('Draw mode activated. Click and drag to draw.');
+                alert('그리기 모드가 활성화되었습니다. 드래그하여 선을 그리세요.');
             }
+        }
+
+        function enableTextMode() {
+            isTextMode = true;
+            isFillMode = false;
+            document.getElementById('textControls').style.display = 'block';
+            alert('텍스트 모드가 활성화되었습니다. 캔버스를 클릭하여 텍스트를 추가하세요.');
         }
 
         // 캔버스 초기화
@@ -107,7 +144,7 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        // Flood Fill 알고리즘
+        // Flood Fill 알고리즘 (채우기 기능)
         function floodFill(imageData, x, y, targetColor, fillColor) {
             const stack = [[x, y]];
             const width = imageData.width;
