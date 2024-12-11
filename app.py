@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+import os
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # 세션 암호화를 위한 비밀키
@@ -33,7 +34,8 @@ def signup():
             flash("이미 존재하는 사용자 이름입니다.")
             return redirect(url_for("signup"))
 
-        hashed_password = generate_password_hash(password, method="sha256")
+        # 비밀번호 해싱
+        hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
         new_user = User(username=username, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
@@ -72,7 +74,6 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         print("데이터베이스가 초기화되었습니다.")
-    
+
     # Flask 애플리케이션 실행
     app.run(host="0.0.0.0", port=5000, debug=True)
-
