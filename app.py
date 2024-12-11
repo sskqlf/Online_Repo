@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+import os
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # 세션 암호화를 위한 비밀키
@@ -14,10 +15,11 @@ class User(db.Model):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
 
-# 데이터베이스 초기화 (최초 실행 시만 필요)
-@app.before_first_request
-def create_tables():
-    db.create_all()
+# 데이터베이스 초기화 함수
+def initialize_database():
+    if not os.path.exists("users.db"):
+        db.create_all()
+        print("데이터베이스가 초기화되었습니다.")
 
 # 홈 페이지
 @app.route("/")
@@ -81,4 +83,5 @@ def drawing_app():
     return render_template("drawing.html")
 
 if __name__ == "__main__":
+    initialize_database()  # 애플리케이션 실행 시 데이터베이스 초기화
     app.run(debug=True)
