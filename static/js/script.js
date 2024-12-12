@@ -4,7 +4,6 @@ const ctx = canvas.getContext('2d');
 let isDrawing = false;
 let isFillMode = false;
 let isTextMode = false;
-let isImageMode = false;
 let startX, startY;
 
 const penColorPicker = document.getElementById('penColor');
@@ -13,14 +12,14 @@ const imageUpload = document.getElementById('imageUpload');
 
 // 선 그리기
 canvas.addEventListener('mousedown', (e) => {
-    if (isFillMode || isTextMode || isImageMode) return;
+    if (isFillMode || isTextMode) return;
     isDrawing = true;
     startX = e.offsetX;
     startY = e.offsetY;
 });
 
 canvas.addEventListener('mousemove', (e) => {
-    if (!isDrawing || isFillMode || isTextMode || isImageMode) return;
+    if (!isDrawing || isFillMode || isTextMode) return;
     const x = e.offsetX;
     const y = e.offsetY;
     ctx.strokeStyle = penColorPicker.value;
@@ -68,7 +67,7 @@ canvas.addEventListener('click', (e) => {
     }
 });
 
-// 이미지 삽입
+// 이미지 업로드
 imageUpload.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -76,53 +75,15 @@ imageUpload.addEventListener('change', (e) => {
     reader.onload = () => {
         const img = new Image();
         img.onload = () => {
-            canvas.addEventListener('click', function insertImage(event) {
-                if (!isImageMode) return;
-                const x = event.offsetX;
-                const y = event.offsetY;
-
-                const scale = prompt("이미지 크기 비율을 입력하세요 (예: 0.5 = 50%)", "1");
-                const width = img.width * parseFloat(scale);
-                const height = img.height * parseFloat(scale);
-                ctx.drawImage(img, x, y, width, height);
-
-                canvas.removeEventListener('click', insertImage); // 한 번 삽입 후 이벤트 제거
-            });
+            const scale = prompt("이미지 크기 비율을 입력하세요 (예: 0.5 = 50%)", "1");
+            const width = img.width * parseFloat(scale);
+            const height = img.height * parseFloat(scale);
+            ctx.drawImage(img, 0, 0, width, height);
         };
         img.src = reader.result;
     };
     reader.readAsDataURL(file);
 });
-
-// 채우기 모드 전환
-function toggleFillMode() {
-    isFillMode = !isFillMode;
-    isTextMode = false;
-    isImageMode = false;
-    document.getElementById('textControls').style.display = 'none';
-    imageUpload.style.display = 'none';
-    alert(isFillMode ? '채우기 모드가 활성화되었습니다.' : '채우기 모드가 비활성화되었습니다.');
-}
-
-// 텍스트 삽입 모드 전환
-function enableTextMode() {
-    isTextMode = true;
-    isFillMode = false;
-    isImageMode = false;
-    document.getElementById('textControls').style.display = 'block';
-    imageUpload.style.display = 'none';
-    alert('텍스트 삽입 모드가 활성화되었습니다.');
-}
-
-// 이미지 삽입 모드 전환
-function enableImageMode() {
-    isImageMode = true;
-    isTextMode = false;
-    isFillMode = false;
-    document.getElementById('textControls').style.display = 'none';
-    imageUpload.style.display = 'block';
-    alert('이미지 삽입 모드가 활성화되었습니다. 이미지를 선택한 후 캔버스를 클릭하세요.');
-}
 
 // 캔버스 초기화
 function clearCanvas() {
@@ -179,3 +140,7 @@ function colorsMatch(color1, color2) {
 function hexToRgb(hex) {
     const bigint = parseInt(hex.slice(1), 16);
     const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return [r, g, b];
+}
