@@ -25,9 +25,9 @@
         <input type="number" id="penWidth" value="2" min="1" max="10">
         <button onclick="toggleFillMode()">채우기 모드 전환</button>
         <button onclick="enableTextMode()">텍스트 삽입 모드</button>
+        <button onclick="enableImageMode()">이미지 삽입 모드</button>
         <button onclick="clearCanvas()">캔버스 초기화</button>
-        <label for="imageUpload">이미지 업로드:</label>
-        <input type="file" id="imageUpload" accept="image/*">
+        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
         <button onclick="saveCanvas()">저장</button>
         <div id="textControls" style="display: none;">
             <label for="textInput">텍스트 입력:</label>
