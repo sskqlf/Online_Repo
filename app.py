@@ -1,39 +1,52 @@
-from flask import Flask, render_template, request, jsonify
-import cv2
-import numpy as np
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 import os
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = './uploads'
+app.secret_key = "your_secret_key"
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# 전역 이미지 변수
-img = np.ones((600, 800, 3), dtype=np.uint8) * 255  # 흰 배경
-pen_color = (0, 0, 0)  # 검은색
-pen_width = 5
+# 사용자 데이터 (데모용)
+users = {}
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+# 라우트
+@app.route("/")
+def home():
+    if "user_id" in session:
+        return render_template("index.html")
+    flash("로그인하세요.")
+    return redirect(url_for("login"))
 
-@app.route('/draw', methods=['POST'])
-def draw():
-    global img, pen_color, pen_width
-    data = request.json
-    x1, y1 = data['x1'], data['y1']
-    x2, y2 = data['x2'], data['y2']
-    
-    # 선 그리기
-    cv2.line(img, (x1, y1), (x2, y2), pen_color, pen_width)
-    return jsonify({"message": "Line drawn"})
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        if username in users and users[username] == password:
+            session["user_id"] = username
+            flash("로그인 성공!")
+            return redirect(url_for("home"))
+        flash("잘못된 사용자 이름 또는 비밀번호입니다.")
+    return render_template("login.html")
 
-@app.route('/save', methods=['POST'])
-def save():
-    global img
-    save_path = os.path.join(app.config['UPLOAD_FOLDER'], 'output.png')
-    cv2.imwrite(save_path, img)
-    return jsonify({"message": "Image saved", "path": save_path})
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        if username in users:
+            flash("이미 존재하는 사용자 이름입니다.")
+            return redirect(url_for("signup"))
+        users[username] = password
+        flash("회원가입 성공! 로그인하세요.")
+        return redirect(url_for("login"))
+    return render_template("signup.html")
+
+@app.route("/logout")
+def logout():
+    session.pop("user_id", None)
+    flash("로그아웃되었습니다.")
+    return redirect(url_for("login"))
 
 if __name__ == "__main__":
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
