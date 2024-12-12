@@ -50,3 +50,21 @@ function saveImage() {
             window.open(data.path, '_blank');
         });
 }
+
+// 이미지 업로드 기능 추가
+const imageInput = document.getElementById('imageUpload');
+imageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+            // 캔버스에 이미지 그리기
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+});
