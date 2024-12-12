@@ -69,7 +69,7 @@ canvas.addEventListener('click', (e) => {
     }
 });
 
-// 이미지 업로드 및 크기 조절
+// 이미지 업로드
 imageUpload.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -77,10 +77,11 @@ imageUpload.addEventListener('change', (e) => {
     reader.onload = () => {
         const img = new Image();
         img.onload = () => {
-            const scale = prompt("이미지 크기 비율을 입력하세요 (예: 0.5 = 50%)", "1");
-            const width = img.width * parseFloat(scale);
-            const height = img.height * parseFloat(scale);
-            ctx.drawImage(img, 0, 0, width, height);
+            const x = canvas.width / 4;
+            const y = canvas.height / 4;
+            const width = img.width / 2;
+            const height = img.height / 2;
+            ctx.drawImage(img, x, y, width, height);
         };
         img.src = reader.result;
     };
@@ -106,6 +107,14 @@ function enableTextMode() {
 // 캔버스 초기화
 function clearCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// 캔버스 저장
+function saveCanvas() {
+    const link = document.createElement('a');
+    link.download = 'drawing.png';
+    link.href = canvas.toDataURL();
+    link.click();
 }
 
 // Flood Fill 알고리즘
@@ -141,7 +150,6 @@ function floodFill(imageData, x, y, targetColor, fillColor) {
     }
 }
 
-// 픽셀 색상 가져오기
 function getPixelColor(imageData, x, y) {
     const index = (y * imageData.width + x) * 4;
     return [
@@ -152,12 +160,10 @@ function getPixelColor(imageData, x, y) {
     ];
 }
 
-// 색상 비교 함수
 function colorsMatch(color1, color2) {
     return color1[0] === color2[0] && color1[1] === color2[1] && color1[2] === color2[2] && color1[3] === color2[3];
 }
 
-// HEX 색상 -> RGB 변환
 function hexToRgb(hex) {
     const bigint = parseInt(hex.slice(1), 16);
     const r = (bigint >> 16) & 255;
