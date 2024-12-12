@@ -79,8 +79,6 @@ def logout():
     session.pop("user_id", None)
     flash("로그아웃되었습니다.")
     return redirect(url_for("home"))
-
-# 그림판 페이지
 @app.route("/drawing", methods=["GET", "POST"])
 def drawing():
     if "user_id" not in session:
@@ -88,7 +86,6 @@ def drawing():
         return redirect(url_for("login"))
 
     if request.method == "POST":
-        # 파일 저장 처리
         if "drawing" in request.files:
             file = request.files["drawing"]
             if file.filename != "":
@@ -97,7 +94,6 @@ def drawing():
                 filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
                 file.save(filepath)
 
-                # 데이터베이스에 저장
                 with open(filepath, "rb") as f:
                     image_data = f.read()
                 drawing = Drawing(user_id=user_id, image_data=image_data, filename=filename)
@@ -106,6 +102,10 @@ def drawing():
 
                 flash("그림이 저장되었습니다!")
                 return redirect(url_for("drawing"))
+
+    user_drawings = Drawing.query.filter_by(user_id=session["user_id"]).all()
+    return render_template("drawing.html", drawings=user_drawings)
+
 
     # 저장된 그림 목록 조회
     user_drawings = Drawing.query.filter_by(user_id=session["user_id"]).all()

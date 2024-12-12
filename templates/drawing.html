@@ -6,6 +6,7 @@
 </head>
 <body>
     <h1>그림판</h1>
+    <!-- 파일 업로드를 위한 폼 -->
     <form method="POST" enctype="multipart/form-data">
         <label for="drawing">그림 파일 업로드:</label>
         <input type="file" name="drawing" id="drawing" accept="image/*" required>
@@ -14,10 +15,14 @@
         <button type="submit" style="padding: 10px 20px; font-size: 16px;">저장</button>
     </form>
     <br>
+
+    <!-- 저장된 그림 목록 -->
     <h2>저장된 그림 목록</h2>
     <ul>
         {% for drawing in drawings %}
             <li>
+                <img src="{{ url_for('display_image', drawing_id=drawing.id) }}" alt="{{ drawing.filename }}" style="max-width: 200px; max-height: 200px;">
+                <br>
                 {{ drawing.filename }}
                 <a href="{{ url_for('download_drawing', drawing_id=drawing.id) }}">다운로드</a>
             </li>
