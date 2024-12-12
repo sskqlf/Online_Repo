@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>그림판 앱</title>
+    <title>그림판</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -15,7 +15,7 @@
     </style>
 </head>
 <body>
-    <h1>그림판 앱</h1>
+    <h1>그림판</h1>
     <a href="/logout">로그아웃</a>
     <canvas id="drawingCanvas" width="800" height="600"></canvas>
     <div id="controls">
@@ -28,6 +28,7 @@
         <button onclick="clearCanvas()">캔버스 초기화</button>
         <label for="imageUpload">이미지 업로드:</label>
         <input type="file" id="imageUpload" accept="image/*">
+        <button onclick="saveCanvas()">저장</button>
         <div id="textControls" style="display: none;">
             <label for="textInput">텍스트 입력:</label>
             <input type="text" id="textInput" placeholder="텍스트를 입력하세요">
@@ -35,163 +36,6 @@
             <input type="number" id="fontSize" value="20" min="10" max="100">
         </div>
     </div>
-    <script>
-        const canvas = document.getElementById('drawingCanvas');
-        const ctx = canvas.getContext('2d');
-
-        let isDrawing = false;
-        let isFillMode = false;
-        let isTextMode = false;
-        let startX = 0;
-        let startY = 0;
-
-        const penColorPicker = document.getElementById('penColor');
-        const penWidthInput = document.getElementById('penWidth');
-        const imageUpload = document.getElementById('imageUpload');
-
-        // 선 그리기 이벤트
-        canvas.addEventListener('mousedown', (e) => {
-            if (isFillMode || isTextMode) return;
-            isDrawing = true;
-            startX = e.offsetX;
-            startY = e.offsetY;
-        });
-
-        canvas.addEventListener('mousemove', (e) => {
-            if (!isDrawing || isFillMode || isTextMode) return;
-            const currentX = e.offsetX;
-            const currentY = e.offsetY;
-            ctx.strokeStyle = penColorPicker.value;
-            ctx.lineWidth = penWidthInput.value;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(currentX, currentY);
-            ctx.stroke();
-            ctx.closePath();
-            startX = currentX;
-            startY = currentY;
-        });
-
-        canvas.addEventListener('mouseup', () => {
-            isDrawing = false;
-        });
-
-        canvas.addEventListener('mouseout', () => {
-            isDrawing = false;
-        });
-
-        // 채우기 모드
-        canvas.addEventListener('click', (e) => {
-            if (!isFillMode) return;
-
-            const fillColor = penColorPicker.value;
-            const x = e.offsetX;
-            const y = e.offsetY;
-
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const targetColor = getPixelColor(imageData, x, y);
-            const fillColorRGB = hexToRgb(fillColor);
-
-            floodFill(imageData, x, y, targetColor, fillColorRGB);
-            ctx.putImageData(imageData, 0, 0);
-        });
-
-        // 텍스트 삽입
-        canvas.addEventListener('click', (e) => {
-            if (!isTextMode) return;
-
-            const textInput = document.getElementById('textInput').value;
-            const fontSize = document.getElementById('fontSize').value;
-            const x = e.offsetX;
-            const y = e.offsetY;
-
-            if (textInput) {
-                ctx.font = `${fontSize}px Arial`;
-                ctx.fillStyle = penColorPicker.value;
-                ctx.fillText(textInput, x, y);
-            }
-        });
-
-        // 채우기 모드 전환
-        function toggleFillMode() {
-            isFillMode = !isFillMode;
-            isTextMode = false;
-            document.getElementById('textControls').style.display = 'none';
-            alert(isFillMode ? '채우기 모드가 활성화되었습니다.' : '채우기 모드가 비활성화되었습니다.');
-        }
-
-        // 텍스트 삽입 모드
-        function enableTextMode() {
-            isTextMode = true;
-            isFillMode = false;
-            document.getElementById('textControls').style.display = 'block';
-            alert('텍스트 삽입 모드가 활성화되었습니다.');
-        }
-
-        // 캔버스 초기화
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        // 이미지 업로드 이벤트
-        imageUpload.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    // 캔버스에 이미지 그리기
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-
-        // Flood Fill 알고리즘
-        function floodFill(imageData, x, y, targetColor, fillColor) {
-            const stack = [[x, y]];
-            const width = imageData.width;
-            const height = imageData.height;
-
-            while (stack.length) {
-                const [px, py] = stack.pop();
-                const index = (py * width + px) * 4;
-
-                if (
-                    px >= 0 && px < width &&
-                    py >= 0 && py < height &&
-                    colorsMatch(targetColor, [
-                        imageData.data[index],
-                        imageData.data[index + 1],
-                        imageData.data[index + 2],
-                        imageData.data[index + 3],
-                    ])
-                ) {
-                    imageData.data[index] = fillColor[0];
-                    imageData.data[index + 1] = fillColor[1];
-                    imageData.data[index + 2] = fillColor[2];
-                    imageData.data[index + 3] = 255;
-
-                    stack.push([px + 1, py]);
-                    stack.push([px - 1, py]);
-                    stack.push([px, py + 1]);
-                    stack.push([px, py - 1]);
-                }
-            }
-        }
-
-        // 픽셀 색상 가져오기
-        function getPixelColor(imageData, x, y) {
-            const index = (y * imageData.width + x) * 4;
-            return [
-                imageData.data[index],     // Red
-                imageData.data[index + 1], // Green
-                imageData.data[index + 2], // Blue
-                imageData.data[index + 3],
-
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
