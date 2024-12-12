@@ -37,9 +37,10 @@ canvas.addEventListener('mouseup', () => {
     isDrawing = false;
 });
 
-// 채우기
+// 채우기 기능
 canvas.addEventListener('click', (e) => {
     if (!isFillMode) return;
+
     const fillColor = penColorPicker.value;
     const x = e.offsetX;
     const y = e.offsetY;
@@ -55,19 +56,20 @@ canvas.addEventListener('click', (e) => {
 // 텍스트 삽입
 canvas.addEventListener('click', (e) => {
     if (!isTextMode) return;
-    const text = document.getElementById('textInput').value;
+
+    const textInput = document.getElementById('textInput').value;
     const fontSize = document.getElementById('fontSize').value;
     const x = e.offsetX;
     const y = e.offsetY;
 
-    if (text) {
+    if (textInput) {
         ctx.font = `${fontSize}px Arial`;
         ctx.fillStyle = penColorPicker.value;
-        ctx.fillText(text, x, y);
+        ctx.fillText(textInput, x, y);
     }
 });
 
-// 이미지 업로드
+// 이미지 업로드 및 크기 조절
 imageUpload.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -84,6 +86,22 @@ imageUpload.addEventListener('change', (e) => {
     };
     reader.readAsDataURL(file);
 });
+
+// 채우기 모드 전환
+function toggleFillMode() {
+    isFillMode = !isFillMode;
+    isTextMode = false;
+    document.getElementById('textControls').style.display = 'none';
+    alert(isFillMode ? '채우기 모드가 활성화되었습니다.' : '채우기 모드가 비활성화되었습니다.');
+}
+
+// 텍스트 삽입 모드 전환
+function enableTextMode() {
+    isTextMode = true;
+    isFillMode = false;
+    document.getElementById('textControls').style.display = 'block';
+    alert('텍스트 삽입 모드가 활성화되었습니다.');
+}
 
 // 캔버스 초기화
 function clearCanvas() {
@@ -123,6 +141,7 @@ function floodFill(imageData, x, y, targetColor, fillColor) {
     }
 }
 
+// 픽셀 색상 가져오기
 function getPixelColor(imageData, x, y) {
     const index = (y * imageData.width + x) * 4;
     return [
@@ -133,10 +152,12 @@ function getPixelColor(imageData, x, y) {
     ];
 }
 
+// 색상 비교 함수
 function colorsMatch(color1, color2) {
     return color1[0] === color2[0] && color1[1] === color2[1] && color1[2] === color2[2] && color1[3] === color2[3];
 }
 
+// HEX 색상 -> RGB 변환
 function hexToRgb(hex) {
     const bigint = parseInt(hex.slice(1), 16);
     const r = (bigint >> 16) & 255;
