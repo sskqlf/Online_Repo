@@ -2,16 +2,52 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>홈</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>그림판 및 파일 관리</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            cursor: crosshair;
+        }
+        #controls {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <h1>환영합니다!</h1>
+    <h1>그림판 및 파일 관리</h1>
+    <a href="/logout">로그아웃</a>
+
+    <!-- 그림판 -->
+    <h2>그림판</h2>
+    <canvas id="drawingCanvas" width="800" height="600"></canvas>
+    <div id="controls">
+        <label for="penColor">펜 색상:</label>
+        <input type="color" id="penColor" value="#000000">
+        <label for="penWidth">펜 두께:</label>
+        <input type="number" id="penWidth" value="2" min="1" max="10">
+        <button onclick="toggleFillMode()">채우기 모드 전환</button>
+        <button onclick="enableTextMode()">텍스트 삽입 모드</button>
+        <button onclick="clearCanvas()">캔버스 초기화</button>
+        <label for="imageUpload">이미지 업로드:</label>
+        <input type="file" id="imageUpload" accept="image/*">
+        <button onclick="saveCanvas()">그림 저장</button>
+        <div id="textControls" style="display: none;">
+            <label for="textInput">텍스트 입력:</label>
+            <input type="text" id="textInput" placeholder="텍스트를 입력하세요">
+            <label for="fontSize">글자 크기:</label>
+            <input type="number" id="fontSize" value="20" min="10" max="100">
+        </div>
+    </div>
+
+    <!-- 파일 관리 -->
+    <h2>파일 관리</h2>
     <form method="POST" action="/upload" enctype="multipart/form-data">
         <label for="file">파일 업로드:</label>
         <input type="file" name="file" id="file" required>
         <button type="submit">업로드</button>
     </form>
-    <h2>내 파일 목록</h2>
+    <h3>내 파일 목록</h3>
     <ul>
         {% for file in files %}
         <li>
@@ -20,7 +56,8 @@
         </li>
         {% endfor %}
     </ul>
-    <br>
-    <a href="/logout">로그아웃</a>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
+
